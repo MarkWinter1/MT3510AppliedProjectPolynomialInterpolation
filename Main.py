@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy
 
-print("hello")
+#This file is mostly just for testing junk
+#May later be made into a something to call the other files sequentially
 
 f = lambda x: (numpy.e)**x * numpy.cos(10*x)
 
