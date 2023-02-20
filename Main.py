@@ -10,6 +10,10 @@ yVals = f(xVals)
 
 plot = plt.plot(xVals,yVals)
 #plt.savefig("testoutputplot.png")  ##testplot, just graphing the given function 
-plt.show()
+#plt.show()
+
+
+	
+
 
 
