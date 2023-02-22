@@ -88,6 +88,7 @@ def piecewiseLagrangePolynomialInterpolation( function, degree, knots ):
 
 piecewiseLagrangePolynomialInterpolation( 0, 0, 0)
 
+# Update random hashtag to check github working
 
 # this has a wrapper that evaluates the function at the set of inputs
 # to perform the specified function
