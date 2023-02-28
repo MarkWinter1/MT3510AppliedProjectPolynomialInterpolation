@@ -3,7 +3,7 @@
 
 
 Written by:
-[Add your names],Charlotte Larson, Mark Winter
+[Add your names],Charlotte Larson, Mark Winter, Gregor King
 
 
 temporary edit
