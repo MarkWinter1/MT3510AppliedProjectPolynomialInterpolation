@@ -52,24 +52,7 @@ def piecewiseLagrangePolynomialInterpolation( knots, degree = 3 ):
 
 	y = np.sum(a[:,j[:]]*(x[:]**pows.reshape(degree+1,1)),axis=0)
 
-	plt.plot(x,f(x),label='exact function')
-	plt.plot(knotsX,knotsY,'kx',mew=2,label='data')
-	plt.plot(x,y,'.',label='poly interpolated')
-	plt.xlabel('x')
-	plt.ylabel('y')
-	plt.legend()
-	plt.tight_layout()
-	plt.show()
-
-	plt.figure(figsize=(8,5))
-	plt.plot(x,np.abs(f(x)-y))
-	plt.xlabel('$x$')
-	plt.ylabel('$|y-p|$')
-	plt.title('Error')
-	plt.tight_layout()
-	plt.show()
-
-	return 0
+	return y
 
 
 
@@ -83,9 +66,22 @@ f = lambda x: (numpy.e)**x * numpy.cos(10*x)
 
 testknots = [[x, f(x)] for x in np.linspace(-1,1,11)]
 
-piecewiseLagrangePolynomialInterpolation(testknots, 3)
+y = piecewiseLagrangePolynomialInterpolation(testknots, 3)
 
+plt.plot(x,f(x),label='exact function')
+plt.plot([ knot[0] for knot in testknots ],[ knot[1] for knot in testknots ],'kx',mew=2,label='data')
+plt.plot(x,y,'.',label='poly interpolated')
+plt.xlabel('x')
+plt.ylabel('y')
+plt.legend()
+plt.tight_layout()
+plt.show()
 
-
-
+plt.figure(figsize=(8,5))
+plt.plot(x,np.abs(f(x)-y))
+plt.xlabel('$x$')
+plt.ylabel('$|y-p|$')
+plt.title('Error')
+plt.tight_layout()
+plt.show()
 	
