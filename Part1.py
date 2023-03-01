@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np, numpy
 
-# Testing
 ###############  PART ONE  ################
 
 # Create a function which performs a piecewise Lagrange polynomial interpolation. It
@@ -14,61 +13,47 @@ import numpy as np, numpy
 #evaluation points yourself.
 
 
-#The Test Function
-f = lambda x: (numpy.e)**x * numpy.cos(10*x)
-
-xValsTest = numpy.linspace(-(numpy.pi), (numpy.pi), 500)
-yValsTest = f(xValsTest)
-
-#plot = plt.plot(xValsTest,yValsTest)
-#plt.savefig("testoutputplot.png")  ##testplot, just graphing the given function
-#plt.show()
+############## IMPLEMENTATION ##############
 
 #returns __a function__ that operates the polynomial. 
 #degree is a positive int, knots is a list of coordinate pairs (x, y) 
-def piecewiseLagrangePolynomialInterpolation( function, degree, knots ):
-	Ndeg = 3
+def piecewiseLagrangePolynomialInterpolation( knots, degree = 3 ):
 
-	N = 101
-	x = np.linspace(-1,1,N)
+	#put the knots into a dual list form for simplicity reasons
+	knotsX = numpy.array([ knot[0] for knot in knots ])
+	knotsY = numpy.array([ knot[1] for knot in knots ])
 
-	M = 11
-	x0 = np.linspace(-1,1,M)
-	y0 = f(x0)
-
-	# Now do out piecewise polynomial
-	#----------------------------------------------------------------
-
-	h = x0[2]-x0[1]
+	M = len(knotsX)
+	h = knotsX[2]-knotsX[1]
 
 	# We have M-deg interpolants to obtain
-
-	Nint = M - Ndeg
-	pt1 = np.arange(Ndeg+1)
+	Nint = M - degree
+	pt1 = np.arange(degree+1)
 	pts = pt1 + np.arange(Nint).reshape(Nint,1) # these are the sets of points we require
 
-	a = np.zeros((Ndeg+1,Nint))
+	a = np.zeros((degree+1,Nint))
 	for i in range(Nint):
-		A = np.vander(x0[pts[i,:]])
-		a[:,i] = np.linalg.solve(A,y0[pts[i,:]])
+		A = np.vander(knotsX[pts[i,:]])
+		a[:,i] = np.linalg.solve(A,knotsY[pts[i,:]])
 
-	pows = (Ndeg-np.arange(Ndeg+1))
+	pows = (degree-np.arange(degree+1))
 	y = np.empty_like(x)
 
-	h = (x0[-1]-x0[0])/(M-1)                  # assumed spacing
+	h = (knotsX[-1]-knotsX[0])/(M-1)                  # assumed spacing
+	
+	# making sure we don't overshoot the last subinterval
+	k = np.minimum(M-2,((x-x[0])/h).astype(int)) 
 
-	k = np.minimum(M-2,((x-x[0])/h).astype(int)) # making sure we don't overshoot the last subinterval
-   
-	j = k - Ndeg//2    
+	j = k - degree//2    
 
 	# account for j<0 or j>Nint-1, i.e. at the edge
 	j = np.maximum(0,j)
 	j = np.minimum(j,Nint-1)
 
-	y = np.sum(a[:,j[:]]*(x[:]**pows.reshape(Ndeg+1,1)),axis=0)
+	y = np.sum(a[:,j[:]]*(x[:]**pows.reshape(degree+1,1)),axis=0)
 
-	plt.plot(x,np.sin(x),label='exact function')
-	plt.plot(x0,y0,'kx',mew=2,label='data')
+	plt.plot(x,f(x),label='exact function')
+	plt.plot(knotsX,knotsY,'kx',mew=2,label='data')
 	plt.plot(x,y,'.',label='poly interpolated')
 	plt.xlabel('x')
 	plt.ylabel('y')
@@ -77,7 +62,7 @@ def piecewiseLagrangePolynomialInterpolation( function, degree, knots ):
 	plt.show()
 
 	plt.figure(figsize=(8,5))
-	plt.plot(x,np.abs(np.sin(x)-y))
+	plt.plot(x,np.abs(f(x)-y))
 	plt.xlabel('$x$')
 	plt.ylabel('$|y-p|$')
 	plt.title('Error')
@@ -86,14 +71,21 @@ def piecewiseLagrangePolynomialInterpolation( function, degree, knots ):
 
 	return 0
 
-piecewiseLagrangePolynomialInterpolation( 0, 0, 0)
 
-# Update random hashtag to check github working
 
-# this has a wrapper that evaluates the function at the set of inputs
-# to perform the specified function
 
-# PWLPI( function, degree, knots )
+#The Test Function
+#Generate the test x values
+N = 101
+x = np.linspace(-1,1,N)
+
+f = lambda x: (numpy.e)**x * numpy.cos(10*x)
+
+testknots = [[x, f(x)] for x in np.linspace(-1,1,11)]
+
+piecewiseLagrangePolynomialInterpolation(testknots, 3)
+
+
 
 
 	
