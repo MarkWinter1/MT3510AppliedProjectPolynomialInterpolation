@@ -13,13 +13,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Define the function to be interpolated
-def f(x):
-    return np.exp(-x**2)
 
 # Set the knots and evaluation points
 knots = np.linspace(-3, 3, 11)
 x = np.linspace(-4, 4, 100)
+
+#the test function to use from part 1
+f = lambda x: (numpy.e)**x * numpy.cos(10*x)
 
 # Define the function to calculate the Lagrange interpolating polynomial
 def lagrange_poly(xk, yk, x):
