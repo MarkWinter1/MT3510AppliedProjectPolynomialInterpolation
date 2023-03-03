@@ -18,88 +18,91 @@ import matplotlib.pyplot as plt
 
 f = lambda x: (numpy.e)**x * numpy.cos(10*x)
 
-def piecewiseLagrangePolynomialInterpolation( function, degree, knots ):
-	Ndeg = 3
+def piecewiseLagrangePolynomialInterpolation( knots, degree = 3 ):
 
-	N = 101
-	x = np.linspace(-1,1,N)
+	#put the knots into a dual list form for simplicity reasons
+    knotsX = numpy.array([ knot[0] for knot in knots ])
+    knotsY = numpy.array([ knot[1] for knot in knots ])
 
-	M = 11
-	x0 = np.linspace(-1,1,M)
-	y0 = f(x0)
-
-	# Now do out piecewise polynomial
-	#----------------------------------------------------------------
-
-	h = x0[2]-x0[1]
-
+    M = len(knotsX)
+    h = knotsX[2]-knotsX[1]
+#    print('This is knot length',M)
+#    print('This is degree', degree)
 	# We have M-deg interpolants to obtain
+    Nint = M - degree
+    pt1 = np.arange(degree+1)
+    pts = pt1 + np.arange(Nint).reshape(Nint,1) # these are the sets of points we require
 
-	Nint = M - Ndeg
-	pt1 = np.arange(Ndeg+1)
-	pts = pt1 + np.arange(Nint).reshape(Nint,1) # these are the sets of points we require
+    a = np.zeros((degree+1,Nint))
+    for i in range(Nint):
+        A = np.vander(knotsX[pts[i,:]])
+        a[:,i] = np.linalg.solve(A,knotsY[pts[i,:]])
 
-	a = np.zeros((Ndeg+1,Nint))
-	for i in range(Nint):
-		A = np.vander(x0[pts[i,:]])
-		a[:,i] = np.linalg.solve(A,y0[pts[i,:]])
+    pows = (degree-np.arange(degree+1))
+    y = np.empty_like(x)
 
-	pows = (Ndeg-np.arange(Ndeg+1))
-	y = np.empty_like(x)
+    h = (knotsX[-1]-knotsX[0])/(M-1)                  # assumed spacing
+	
+	# making sure we don't overshoot the last subinterval
+    k = np.minimum(M-2,((x-x[0])/h).astype(int)) 
 
-	h = (x0[-1]-x0[0])/(M-1)                  # assumed spacing
-
-	k = np.minimum(M-2,((x-x[0])/h).astype(int)) # making sure we don't overshoot the last subinterval
-   
-	j = k - Ndeg//2    
+    j = k - degree//2    
 
 	# account for j<0 or j>Nint-1, i.e. at the edge
-	j = np.maximum(0,j)
-	j = np.minimum(j,Nint-1)
+    j = np.maximum(0,j)
+    j = np.minimum(j,Nint-1)
 
-	y = np.sum(a[:,j[:]]*(x[:]**pows.reshape(Ndeg+1,1)),axis=0)
+    y = np.sum(a[:,j[:]]*(x[:]**pows.reshape(degree+1,1)),axis=0)
 
-# 	plt.plot(x,(numpy.e)**x * numpy.cos(10*x),label='exact function')
-# 	plt.plot(x0,y0,'kx',mew=2,label='data')
-# 	plt.plot(x,y,'.',label='poly interpolated')
-# 	plt.xlabel('x')
-# 	plt.ylabel('y')
-# 	plt.legend()
-# 	plt.tight_layout()
-# 	plt.show()
+    return y, h
 
-# 	plt.figure(figsize=(8,5))
-# 	plt.plot(x,np.abs(np.sin(x)-y))
-# 	plt.xlabel('$x$')
-# 	plt.ylabel('$|y-p|$')
-# 	plt.title('Error')
-# 	plt.tight_layout()
-# 	plt.show()
+N = 100
+x = np.linspace(-1,1,N)
 
-	return y
+f = lambda x: (numpy.e)**x * numpy.cos(10*x)
 
+h = np.zeros([10, 25])
+error_max = np.zeros([10, 25])
 
+error = np.array([])
 
+for i in range(3, 13):
 
-
-NN = 100    # Choose how many resolutions to test
-a = 0
-b = 1/6
-M = 11
-
-err_h = np.zeros(NN)    # store error  
-h = np.zeros(NN)    #store h
-
-x = np.linspace(a, b, 500)
-for i in range(NN):
-    x0 = np.linspace(a, b, i+20)
-    y0 = (np.e)**x0 * np.cos(10*x0)
+    for j in range(13, 28):
+        
+        testknots = [[x, f(x)] for x in np.linspace(-1,1,j)]
     
-    f = piecewiseLagrangePolynomialInterpolation(0,0,0)
+        y = piecewiseLagrangePolynomialInterpolation(testknots, i)[0]
+        
+        h[i-3][j-13] = piecewiseLagrangePolynomialInterpolation(testknots, i)[1]
+        error_max[i-3][j-13] = np.max(np.abs(y - f(x)))
+
+    # plt.figure(figsize=(8,5))
+    # plt.plot(x,np.abs(f(x)-y))
+    # plt.xlabel('$x$')
+    # plt.ylabel('$|y-p|$')
+    # plt.title('Error')
+    # plt.tight_layout()
+    # plt.show()
     
-    #y = f(x)
+    # print(np.abs(f(x)-y))
+
+fig = plt.figure(figsize = (8 ,5))
+for i in range(0, 10, 4):
+    text = 'degree = {:}'.format(i+3)
+    plt.loglog(h[i], error_max[i], label = text)
+plt.loglog(h[-1], 100*h[-1]**3, linestyle = 'dashed', label = '$h^3$')
+plt.loglog(h[-1], 100000*h[-1]**7, linestyle = 'dashed', label = '$h^7$')
+plt.loglog(h[-1], 1000000000*h[-1]**11, linestyle = 'dashed', label = '$h^{11}$')
+
+plt.xlim(0.08, 0.16)
+plt.legend()
+plt.show()
     
-    err_h[i] = np.max(np.abs(f - y0))
-    h[i] = x0[1] - x0[0]
-    
-# h is spacing, b is last point and a is first point
+# plt.figure(figsize=(8,5))
+# plt.plot(x,np.abs(f(x)-y))
+# plt.xlabel('$x$')
+# plt.ylabel('$|y-p|$')
+# plt.title('Error')
+# plt.tight_layout()
+# plt.show()
