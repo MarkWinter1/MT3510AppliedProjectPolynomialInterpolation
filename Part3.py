@@ -36,14 +36,14 @@ def lagrange_polynomial_degree(a,b,M):
 
 #3 - set up a plot which updates as it slides 
 
-def polynomial_plot(a=1,b=2,M=10):
+def polynomial_plot(a=1,b=2,degree=(1,10)):
     plt.figure(figsize=(8,5))
     plt.plot(x,f(x),label='exact function')
     plt.plot(x0,y0,'kx',mew=2,label='data')
-    plt.plot(x,lagrange_polynomial_degree(a,b,M),'.',label=f'poly interpolated data of degree {M}')
+    plt.plot(x,lagrange_polynomial_degree(a,b,degree),'.',label=f'poly interpolated data of degree {M}')
     plt.xlabel('x')
     plt.ylabel('y')
     plt.legend()
     plt.show()
     
-interactive(polynomial_plot,M=5, a=fixed(1),b=fixed(2))
+interactive(polynomial_plot,M=1, a=fixed(1),b=fixed(2))
