@@ -12,48 +12,38 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from ipywidgets import interact,interactive,fixed #imported all i need to get this scale changing thing 
 
+#1 - set up our function and our x0 and y0 
 
-# Set the knots and evaluation points
-knots = np.linspace(-3, 3, 11)
-x = np.linspace(-4, 4, 100)
+def f(x):
+    return np.exp(x)*np.cos(10*x)
 
-#the test function to use from part 1
-f = lambda x: (numpy.e)**x * numpy.cos(10*x)
+N=100
+x = np.linspace(1,2,N)
 
-# Define the function to calculate the Lagrange interpolating polynomial
-def lagrange_poly(xk, yk, x):
-    n = len(xk)
-    p = 0
-    for k in range(n):
-        L = 1
-        for j in range(n):
-            if j != k:
-                L *= (x - xk[j]) / (xk[k] - xk[j])
-        p += yk[k] * L
-    return p
+#2 - make a function performing a lagrange polynomial of degree M based on the input of M.
 
-# Create the initial plot with the knots and function to be interpolated
-fig, ax = plt.subplots()
-ax.plot(x, f(x), label='Function to be interpolated')
-ax.scatter(knots, f(knots), color='red', label='Knots')
+def lagrange_polynomial_degree(a,b,M):
+    x0 = np.linspace(a,b,M)
+    y0 = f(x0)
+    A = np.vander(x0)         
+    a = np.linalg.solve(A,y0)
+    pows = (M-1-np.arange(M)).reshape(M,1)         # these are the exponents required
+    xnew = np.reshape(x,(1,N))                     # reshape for the broadcast
+    ynew = np.sum((xnew**pows)*a.reshape(M,1),axis=0)
+    return ynew
 
-# Define the function to be called when the degree slider is changed
-def update(degree):
-    # Calculate the Lagrange interpolating polynomial for the current degree
-    xk = knots[(len(knots)-degree-1)//2 : (len(knots)+degree+2)//2]
-    yk = f(xk)
-    p = lagrange_poly(xk, yk, x)
+#3 - set up a plot which updates as it slides 
+
+def polynomial_plot(a=1,b=2,M=10):
+    plt.figure(figsize=(8,5))
+    plt.plot(x,f(x),label='exact function')
+    plt.plot(x0,y0,'kx',mew=2,label='data')
+    plt.plot(x,lagrange_polynomial_degree(a,b,M),'.',label=f'poly interpolated data of degree {M}')
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.legend()
+    plt.show()
     
-    # Update the plot with the new polynomial
-    ax.cla()
-    ax.plot(x, f(x), label='Function to be interpolated')
-    ax.scatter(knots, f(knots), color='red', label='Knots')
-    ax.plot(x, p, label=f'Lagrange polynomial of degree {degree}')
-    ax.legend()
-
-conda install -c anaconda ipywidgets
-
-# Create the degree slider and set the initial degree to 0
-from ipywidgets import interact
-interact(update, degree=(0, len(knots)-1, 1))
+interactive(polynomial_plot,M=5, a=fixed(1),b=fixed(2))
