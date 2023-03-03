@@ -17,21 +17,21 @@ from ipywidgets import interact,interactive,fixed #imported all i need to get th
 #1 - set up our function and our x0 and y0 
 
 def f(x):
-    return np.exp(x)*np.cos(10*x)
+    return np.exp(x)*np.cos(10*x) #this is the function from Section 1
 
 N=100
 x = np.linspace(1,2,N)
 
-#2 - make a function performing a lagrange polynomial of degree M based on the input of M.
+#2 - make a function performing a lagrange polynomial of degree M based on the input of M. 
 
 def lagrange_polynomial_degree(a,b,M):
     x0 = np.linspace(a,b,M)
     y0 = f(x0)
     A = np.vander(x0)         
-    a = np.linalg.solve(A,y0)
+    a = np.linalg.solve(A,y0) 
     pows = (M-1-np.arange(M)).reshape(M,1)         # these are the exponents required
     xnew = np.reshape(x,(1,N))                     # reshape for the broadcast
-    ynew = np.sum((xnew**pows)*a.reshape(M,1),axis=0)
+    ynew = np.sum((xnew**pows)*a.reshape(M,1),axis=0) 
     return ynew
 
 #3 - set up a plot which updates as it slides 
