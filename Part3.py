@@ -23,6 +23,8 @@ from ipywidgets import interact,interactive,fixed #imported all i need to get th
 def f(x):
     return np.exp(x)*np.cos(10*x)
 
+N=100
+x= np.linspace(1,2,N)
 
 def lagrange_polynomial_degree(a,b,M,N):
     midpoint = (a + b) / 2
@@ -67,6 +69,7 @@ def polynomial_plot(a=1,b=2,degree=1):
     plt.plot(x,lagrange_polynomial_degree(a,b,degree+1, N),'.',label=f'poly interpolated data of degree {degree}')
     plt.xlabel('x')
     plt.ylabel('y')
+    plt.ylim(-7.5,7.5)
     plt.legend()
     plt.show() 
 
