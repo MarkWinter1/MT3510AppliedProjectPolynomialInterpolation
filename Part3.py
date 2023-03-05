@@ -17,12 +17,6 @@ from ipywidgets import interact,interactive,fixed #imported all i need to get th
 
 #1 - set up our function and our x0 and y0 
 
-def f(x):
-    return np.exp(x)*np.cos(10*x) #this is the function from Section 1
-
-N=100
-x = np.linspace(1,2,N)
-
 import numpy as np
 import matplotlib.pyplot as plt
 from ipywidgets import interact,interactive,fixed #imported all i need to get this scale changing thing
