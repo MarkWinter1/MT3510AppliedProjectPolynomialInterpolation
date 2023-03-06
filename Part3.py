@@ -13,12 +13,6 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from ipywidgets import interact,interactive,fixed #imported all i need to get this scale changing thing 
-
-#1 - set up our function and our x0 and y0 
-
-import numpy as np
-import matplotlib.pyplot as plt
 from ipywidgets import interact,interactive,fixed #imported all i need to get this scale changing thing
 def f(x):
     return np.exp(x)*np.cos(10*x)
@@ -27,7 +21,7 @@ N=100
 x= np.linspace(1,2,N)
 
 def lagrange_polynomial_degree(a,b,M,N):
-    midpoint = (a + b) / 2
+    midpoint = (a+b)/2
     x0 = np.array([midpoint])
     y0 = f(x0)
     pows = np.array([[0]])
@@ -35,17 +29,17 @@ def lagrange_polynomial_degree(a,b,M,N):
     for i in range(2, M+1): 
         # If degree is odd
         if i % 2 == 1:
-            # Indexing k of next points relative to the centre with 1/2 added for exact halfway distance between 
-            # points at previous interpolation level, or symmetricity
+            # Index k of next points relative to the centre with 1/2 added for symmetricity between 
+            # points at previous interpolation level
             k = i//2 + 1/2
-            # Identify next left and right with index k multiplied by distance between adjacent points
-            x_right = midpoint + k*(b - midpoint)/M
-            x0 = np.concatenate((x0, [ x_right]))
+            # Identify next right with index k multiplied by distance between adjacent points
+            x_right = midpoint + k*(b-midpoint)/M
+            x0 = np.concatenate((x0,[x_right]))
         else:
-            # Re-define centre for even numbers
-            x_center = midpoint - (i/2)*(midpoint - a)/M
-            x0 = np.concatenate((x0, [x_center]))
-        # Add x0 value to y0 array
+            # Identify next left with index only half of degree because degree is even
+            x_left = midpoint - (i/2)*(midpoint-a)/M
+            x0 = np.concatenate((x0,[x_left]))
+        # Implement x0 value into f for the y0 array
         y0 = np.concatenate((y0, [f(x0[-1])]))
         pows = np.concatenate((pows, [[i]]))
     #y0 = f(x0)
@@ -73,5 +67,5 @@ def polynomial_plot(a=1,b=2,degree=1):
     plt.legend()
     plt.show() 
 
-    
+# Set knots from (1,12) so that interactive graph looks as required in video 
 interactive(polynomial_plot,a=fixed(1),b=fixed(2), degree = (1,12))
