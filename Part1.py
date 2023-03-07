@@ -70,7 +70,7 @@ f = lambda x: (numpy.e)**x * numpy.cos(10*x)
 
 testknots = [[x, f(x)] for x in np.linspace(a,b,11)]
 
-y = piecewiseLagrangePolynomialInterpolation(testknots, 3)
+y = piecewiseLagrangePolynomialInterpolationFunction(testknots, 3)
 
 plt.plot(x,f(x),label='exact function')
 plt.plot([ knot[0] for knot in testknots ],[ knot[1] for knot in testknots ],'kx',mew=2,label='data')
