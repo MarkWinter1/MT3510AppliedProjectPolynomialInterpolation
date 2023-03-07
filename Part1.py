@@ -15,37 +15,24 @@ import numpy as np, numpy
 
 ############## IMPLEMENTATION ##############
 
-#degree is a positive int, knots is a list of coordinate pairs (x, y) 
+#x0, y0 are the x and y values of the knots, xEval is the list on which to evaluate
+#returns the evaluation of xEval using the polynomial interpolation
 def piecewiseLagrangePolynomialInterpolationFunction(x0, y0, xEval, degree = 3):
     Ndeg = degree
     M = len(x0)
     N = len(xEval)
-    # First perform the non piecewise interpolation for comparison
-    #----------------------------------------------------------------
-    A = np.vander(x0)          # construct the Vandermode matrix
-    a = np.linalg.solve(A,y0)  # obtain the coefficients by solving the system
-    pows = (M-1-np.arange(M)).reshape(M,1)         # these are the exponents required
-    xnew = np.reshape(xEval,(1,N))                     # reshape for the broadcast
-    ynew = np.sum((xnew**pows)*a.reshape(M,1),axis=0) # multiply by coefficients and sum along the right direction
-
-    # Now do out piecewise polynomial
-    #----------------------------------------------------------------
-
-    Ndeg = 3
-    h = x0[2]-x0[1]
 
     # We have M-deg interpolants to obtain
-
     Nint = M - Ndeg
     pt1 = np.arange(Ndeg+1)
     pts = pt1 + np.arange(Nint).reshape(Nint,1) # these are the sets of points we require
 
+    #structure a
     a = np.zeros((Ndeg+1,Nint))
     for i in range(Nint):
         A = np.vander(x0[pts[i,:]])
         a[:,i] = np.linalg.solve(A,y0[pts[i,:]])
 
-    pows = (Ndeg-np.arange(Ndeg+1))
     y = np.empty_like(xEval)     # set up new data points
     pows = Ndeg-np.arange(Ndeg+1)
 
