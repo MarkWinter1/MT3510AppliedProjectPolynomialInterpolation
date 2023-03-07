@@ -15,66 +15,82 @@ import numpy as np, numpy
 
 ############## IMPLEMENTATION ##############
 
-#returns !!! a function !!! that operates the polynomial. 
 #degree is a positive int, knots is a list of coordinate pairs (x, y) 
-def piecewiseLagrangePolynomialInterpolationFunction( knots, degree = 3 ):
+def piecewiseLagrangePolynomialInterpolationFunction(x0, y0, xEval, degree = 3):
+    Ndeg = degree
+    # First perform the non piecewise interpolation for comparison
+    #----------------------------------------------------------------
+    A = np.vander(x0)          # construct the Vandermode matrix
+    a = np.linalg.solve(A,y0)  # obtain the coefficients by solving the system
+    pows = (M-1-np.arange(M)).reshape(M,1)         # these are the exponents required
+    xnew = np.reshape(xEval,(1,N))                     # reshape for the broadcast
+    ynew = np.sum((xnew**pows)*a.reshape(M,1),axis=0) # multiply by coefficients and sum along the right direction
 
-	#put the knots into a dual list form for simplicity reasons
-	knotsX = numpy.array([ knot[0] for knot in knots ])
-	knotsY = numpy.array([ knot[1] for knot in knots ])
+    # Now do out piecewise polynomial
+    #----------------------------------------------------------------
 
-	M = len(knotsX)
-	h = knotsX[2]-knotsX[1]
+    Ndeg = 3
+    h = x0[2]-x0[1]
 
-	# We have M-deg interpolants to obtain
-	Nint = M - degree
-	pt1 = np.arange(degree+1)
-	pts = pt1 + np.arange(Nint).reshape(Nint,1) # these are the sets of points we require
+    # We have M-deg interpolants to obtain
 
-	a = np.zeros((degree+1,Nint))
-	for i in range(Nint):
-		A = np.vander(knotsX[pts[i,:]])
-		a[:,i] = np.linalg.solve(A,knotsY[pts[i,:]])
+    Nint = M - Ndeg
+    pt1 = np.arange(Ndeg+1)
+    pts = pt1 + np.arange(Nint).reshape(Nint,1) # these are the sets of points we require
 
-	pows = (degree-np.arange(degree+1))
-	y = np.empty_like(x)
+    a = np.zeros((Ndeg+1,Nint))
+    for i in range(Nint):
+        A = np.vander(x0[pts[i,:]])
+        a[:,i] = np.linalg.solve(A,y0[pts[i,:]])
 
-	h = (knotsX[-1]-knotsX[0])/(M-1)                  # assumed spacing
-	
-	# making sure we don't overshoot the last subinterval
-	k = np.minimum(M-2,((x-x[0])/h).astype(int)) 
+    pows = (Ndeg-np.arange(Ndeg+1))
+    y = np.empty_like(xEval)     # set up new data points
+    pows = Ndeg-np.arange(Ndeg+1)
 
-	j = k - degree//2    
+    for i in range(N):       # loop over new evaluation points
 
-	# account for j<0 or j>Nint-1, i.e. at the edge
-	j = np.maximum(0,j)
-	j = np.minimum(j,Nint-1)
+        if((xEval[i]<x0).all()): # if we're outside of the interval, set k to extrapolate
+            k = 0
+        elif((xEval[i]>x0).all()):
+            k = M-1
+        else:                # find k for x_i, accounting for the possibility that x_i=x_k
+            k = np.where(((xEval[i]<x0[1:]) & (xEval[i]>=x0[:-1])) | 
+                         ((x0[1:]==xEval[i]) & (xEval[i]>x0[:-1])))[0][0]
 
-	y = lambda evalArray: np.sum(a[:,j[:]]*(evalArray[:]**pows.reshape(degree+1,1)),axis=0)
+        # k is the left hand data point of our current subinterval; 
+        # we need the polynomial with this point as the *centre*
+    
+        j = k - Ndeg//2    
 
-	return y
+        # account for j<0 or j>Nint-1, i.e. at the edge
+        j = np.maximum(0,j)
+        j = np.minimum(j,Nint-1)
+
+        y[i] = np.sum(a[:,j]*xEval[i]**pows)
+    
+    return y
 
 #This is a wrapper function to preserve previous functionality
-def piecewiseLagrangePolynomialInterpolation(knots, degree = 3, evaluationInterval = np.linspace(-1, 1, 101)):
-	return piecewiseLagrangePolynomialInterpolationFunction( knots, degree )(evaluationInterval)
-
-
-
-#The Test Function
-#Generate the test x values
-N = 101
-a, b, c = -1, 1, 1.5
-x = np.linspace(a,c,N) 
+#def piecewiseLagrangePolynomialInterpolation(knots, degree = 3, evaluationInterval = np.linspace(-1, 1, 101)):
+#	return piecewiseLagrangePolynomialInterpolationFunction( knots, degree )(evaluationInterval)
 
 f = lambda x: (numpy.e)**x * numpy.cos(10*x)
 
-testknots = [[x, f(x)] for x in np.linspace(a,b,11)]
+N = 101
+x = np.linspace(-2,5,N)
 
-y = piecewiseLagrangePolynomialInterpolationFunction(testknots, 3)
+M = 11
+x0 = np.linspace(-1,1,M)
+y0 = f(x0)
 
+y = piecewiseLagrangePolynomialInterpolationFunction(x0, y0, x)
+
+#y = piecewiseLagrangePolynomialInterpolationFunction(testknots, 3)
+
+plt.figure(figsize=(8,5))
 plt.plot(x,f(x),label='exact function')
-plt.plot([ knot[0] for knot in testknots ],[ knot[1] for knot in testknots ],'kx',mew=2,label='data')
-plt.plot(x,y(x),'.',label='poly interpolated')
+plt.plot(x0,y0,'kx',mew=2,label='data')
+plt.plot(x,y,'.',label='polynomial interpolated')
 plt.xlabel('x')
 plt.ylabel('y')
 plt.legend()
@@ -82,10 +98,12 @@ plt.tight_layout()
 plt.show()
 
 plt.figure(figsize=(8,5))
-plt.plot(x,np.abs(f(x)-y(x)))
+plt.plot(x,np.abs(f(x)-y),label='polynomial interpolated')
 plt.xlabel('$x$')
 plt.ylabel('$|y-p|$')
 plt.title('Error')
+plt.legend()
 plt.tight_layout()
 plt.show()
+
 	
