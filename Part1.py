@@ -15,9 +15,9 @@ import numpy as np, numpy
 
 ############## IMPLEMENTATION ##############
 
-#returns __a function__ that operates the polynomial. 
+#returns !!! a function !!! that operates the polynomial. 
 #degree is a positive int, knots is a list of coordinate pairs (x, y) 
-def piecewiseLagrangePolynomialInterpolation( knots, degree = 3 ):
+def piecewiseLagrangePolynomialInterpolationFunction( knots, degree = 3 ):
 
 	#put the knots into a dual list form for simplicity reasons
 	knotsX = numpy.array([ knot[0] for knot in knots ])
@@ -50,9 +50,13 @@ def piecewiseLagrangePolynomialInterpolation( knots, degree = 3 ):
 	j = np.maximum(0,j)
 	j = np.minimum(j,Nint-1)
 
-	y = np.sum(a[:,j[:]]*(x[:]**pows.reshape(degree+1,1)),axis=0)
+	y = lambda evalArray: np.sum(a[:,j[:]]*(evalArray[:]**pows.reshape(degree+1,1)),axis=0)
 
 	return y
+
+#This is a wrapper function to preserve previous functionality
+#def piecewiseLagrangePolynomialInterpolation(knots, degree = 3, evaluationInterval = knots):
+	
 
 
 
@@ -60,17 +64,18 @@ def piecewiseLagrangePolynomialInterpolation( knots, degree = 3 ):
 #The Test Function
 #Generate the test x values
 N = 101
-x = np.linspace(-1,1,N)
+a, b, c = -1, 1, 1.5
+x = np.linspace(a,c,N) 
 
 f = lambda x: (numpy.e)**x * numpy.cos(10*x)
 
-testknots = [[x, f(x)] for x in np.linspace(-1,1,11)]
+testknots = [[x, f(x)] for x in np.linspace(a,b,11)]
 
 y = piecewiseLagrangePolynomialInterpolation(testknots, 3)
 
 plt.plot(x,f(x),label='exact function')
 plt.plot([ knot[0] for knot in testknots ],[ knot[1] for knot in testknots ],'kx',mew=2,label='data')
-plt.plot(x,y,'.',label='poly interpolated')
+plt.plot(x,y(x),'.',label='poly interpolated')
 plt.xlabel('x')
 plt.ylabel('y')
 plt.legend()
@@ -78,7 +83,7 @@ plt.tight_layout()
 plt.show()
 
 plt.figure(figsize=(8,5))
-plt.plot(x,np.abs(f(x)-y))
+plt.plot(x,np.abs(f(x)-y(x)))
 plt.xlabel('$x$')
 plt.ylabel('$|y-p|$')
 plt.title('Error')
