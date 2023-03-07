@@ -19,6 +19,7 @@ import numpy as np, numpy
 def piecewiseLagrangePolynomialInterpolationFunction(x0, y0, xEval, degree = 3):
     Ndeg = degree
     M = len(x0)
+    N = len(xEval)
     # First perform the non piecewise interpolation for comparison
     #----------------------------------------------------------------
     A = np.vander(x0)          # construct the Vandermode matrix
@@ -70,41 +71,3 @@ def piecewiseLagrangePolynomialInterpolationFunction(x0, y0, xEval, degree = 3):
         y[i] = np.sum(a[:,j]*xEval[i]**pows)
     
     return y
-
-#This is a wrapper function to preserve previous functionality
-#def piecewiseLagrangePolynomialInterpolation(knots, degree = 3, evaluationInterval = np.linspace(-1, 1, 101)):
-#	return piecewiseLagrangePolynomialInterpolationFunction( knots, degree )(evaluationInterval)
-
-f = lambda x: (numpy.e)**x * numpy.cos(10*x)
-
-N = 101
-x = np.linspace(-2,5,N)
-
-M = 11
-x0 = np.linspace(-1,1,M)
-y0 = f(x0)
-
-y = piecewiseLagrangePolynomialInterpolationFunction(x0, y0, x)
-
-#y = piecewiseLagrangePolynomialInterpolationFunction(testknots, 3)
-
-plt.figure(figsize=(8,5))
-plt.plot(x,f(x),label='exact function')
-plt.plot(x0,y0,'kx',mew=2,label='data')
-plt.plot(x,y,'.',label='polynomial interpolated')
-plt.xlabel('x')
-plt.ylabel('y')
-plt.legend()
-plt.tight_layout()
-plt.show()
-
-plt.figure(figsize=(8,5))
-plt.plot(x,np.abs(f(x)-y),label='polynomial interpolated')
-plt.xlabel('$x$')
-plt.ylabel('$|y-p|$')
-plt.title('Error')
-plt.legend()
-plt.tight_layout()
-plt.show()
-
-	
