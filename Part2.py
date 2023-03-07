@@ -13,71 +13,101 @@
 #degree of polynomial tested, and you should attempt to check the rate of convergence
 #from the error data (i.e. the trend ).
 
-import numpy as np, numpy
 import matplotlib.pyplot as plt
+import numpy as np, numpy
 
-f = lambda x: (numpy.e)**x * numpy.cos(10*x)    # Define function
+def piecewiseLagrangePolynomialInterpolationFunction(x0, y0, xEval, degree = 3):
+    Ndeg = degree
+    M = len(x0)
+    N = len(xEval)
 
-def piecewiseLagrangePolynomialInterpolation( knots, degree = 3 ):
-
-	#put the knots into a dual list form for simplicity reasons
-    knotsX = numpy.array([ knot[0] for knot in knots ])
-    knotsY = numpy.array([ knot[1] for knot in knots ])
-
-    M = len(knotsX)
-    h = knotsX[2]-knotsX[1]
-
-	# We have M-deg interpolants to obtain
-    Nint = M - degree
-    pt1 = np.arange(degree+1)
+    # We have M-deg interpolants to obtain
+    Nint = M - Ndeg
+    pt1 = np.arange(Ndeg+1)
     pts = pt1 + np.arange(Nint).reshape(Nint,1) # these are the sets of points we require
 
-    a = np.zeros((degree+1,Nint))
+    #structure a
+    a = np.zeros((Ndeg+1,Nint))
     for i in range(Nint):
-        A = np.vander(knotsX[pts[i,:]])
-        a[:,i] = np.linalg.solve(A,knotsY[pts[i,:]])
+        A = np.vander(x0[pts[i,:]])
+        a[:,i] = np.linalg.solve(A,y0[pts[i,:]])
 
-    pows = (degree-np.arange(degree+1))
-    y = np.empty_like(x)
+    y = np.empty_like(xEval)     # set up new data points
+    pows = Ndeg-np.arange(Ndeg+1)
 
-    h = (knotsX[-1]-knotsX[0])/(M-1)                  # assumed spacing
-	
-	# making sure we don't overshoot the last subinterval
-    k = np.minimum(M-2,((x-x[0])/h).astype(int)) 
+    for i in range(N):       # loop over new evaluation points
 
-    j = k - degree//2    
+        if((xEval[i]<x0).all()): # if we're outside of the interval, set k to extrapolate
+            k = 0
+        elif((xEval[i]>x0).all()):
+            k = M-1
+        else:                # find k for x_i, accounting for the possibility that x_i=x_k
+            k = np.where(((xEval[i]<x0[1:]) & (xEval[i]>=x0[:-1])) | 
+                         ((x0[1:]==xEval[i]) & (xEval[i]>x0[:-1])))[0][0]
 
-	# account for j<0 or j>Nint-1, i.e. at the edge
-    j = np.maximum(0,j)
-    j = np.minimum(j,Nint-1)
+        # k is the left hand data point of our current subinterval; 
+        # we need the polynomial with this point as the *centre*
+    
+        j = k - Ndeg//2    
 
-    y = np.sum(a[:,j[:]]*(x[:]**pows.reshape(degree+1,1)),axis=0)
+        # account for j<0 or j>Nint-1, i.e. at the edge
+        j = np.maximum(0,j)
+        j = np.minimum(j,Nint-1)
 
-    return y, h
-
-N = 101
-x = np.linspace(-1,1,500)
+        y[i] = np.sum(a[:,j]*xEval[i]**pows)
+    
+    return y
 
 f = lambda x: (numpy.e)**x * numpy.cos(10*x)
 
-h = np.zeros([5, N])
-error_max = np.zeros([5, N])
+N = 101
+x = np.linspace(-1,1,N)
 
+M = 11
+x0 = np.linspace(-1,1,M)
+y0 = f(x0)
 
+y = piecewiseLagrangePolynomialInterpolationFunction(x0, y0, x)
 
-for i in range(3, 8):    # Create loop to vary degree
+# plt.figure(figsize=(8,5))
+# plt.plot(x,f(x),label='exact function')
+# plt.plot(x0,y0,'kx',mew=2,label='data')
+# plt.plot(x,y,'.',label='polynomial interpolated')
+# plt.xlabel('x')
+# plt.ylabel('y')
+# plt.legend()
+# plt.tight_layout()
+# plt.show()
+
+# plt.figure(figsize=(8,5))
+# plt.plot(x,np.abs(f(x)-y),label='polynomial interpolated')
+# plt.xlabel('$x$')
+# plt.ylabel('$|y-p|$')
+# plt.title('Error')
+# plt.legend()
+# plt.tight_layout()
+# plt.show()
+
+h = np.zeros([6, N])
+error_max = np.zeros([6, N])
+
+x1 = np.linspace(0.3,0.6,500)    # Take large number of points over a small subset to ensure that the max error will never be 0
+
+for i in range(3, 9):    # Create loop to vary degree
 
     for j in range(N):    # Create loop to vary number of knots N
-        
-        testknots = [[x, f(x)] for x in np.linspace(-1,1,j+60)]    # Skip large h
     
-        y = piecewiseLagrangePolynomialInterpolation(testknots, i)[0]
+        x0 = np.linspace(-1, 1, j+60)    # Skip large h
         
-        h[i-3][j] = piecewiseLagrangePolynomialInterpolation(testknots, i)[1]   # Calculate h within interpolation function and return
-        error_max[i-3][j] = np.max(np.abs(y - f(x)))
+        y0 = f(x0)
+    
+        y = piecewiseLagrangePolynomialInterpolationFunction(x0, y0, x1, i) 
+        
+        h[i-3][j] = x0[1] - x0[0]    # Calculate h within interpolation function and return
+        error_max[i-3][j] = np.max(np.abs(y - f(x1)))
 
 fig = plt.figure(figsize = (8, 5))    # Plot all degrees tested
-for i in range(5):
+for i in range(6):
     text = 'degree = {:}'.format(i+3)
     plt.loglog(h[i], error_max[i], label = text)
 
@@ -88,15 +118,12 @@ plt.show()
 
 
 fig1 = plt.figure(figsize = (8 ,5))    # Plot a few degrees and test for trend
-for i in range(0, 5, 2):
+for i in range(0, 6, 3):
     text = 'degree = {:}'.format(i+3)
     plt.loglog(h[i], error_max[i], label = text)
 
-plt.loglog(h[-1], 1000*h[-1]**4, linestyle = 'dashed', label = '$h^4$')
-plt.loglog(h[-1], 100000*h[-1]**6, linestyle = 'dashed', label = '$h^6$')
-plt.loglog(h[-1], 100000*h[-1]**7, linestyle = 'dashed', label = '$h^7$')
+plt.loglog(h[-1], 100*h[-1]**4, linestyle = 'dashed', label = '$h^4$')
+plt.loglog(h[-1], 10000*h[-1]**7, linestyle = 'dashed', label = '$h^7$')
 
 plt.xlabel('$h$')
 plt.ylabel('$E(h)$')
-plt.legend()
-plt.show()
