@@ -18,6 +18,7 @@ import numpy as np, numpy
 #degree is a positive int, knots is a list of coordinate pairs (x, y) 
 def piecewiseLagrangePolynomialInterpolationFunction(x0, y0, xEval, degree = 3):
     Ndeg = degree
+    M = len(x0)
     # First perform the non piecewise interpolation for comparison
     #----------------------------------------------------------------
     A = np.vander(x0)          # construct the Vandermode matrix
