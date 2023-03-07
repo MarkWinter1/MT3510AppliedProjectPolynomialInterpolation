@@ -55,9 +55,8 @@ def piecewiseLagrangePolynomialInterpolationFunction( knots, degree = 3 ):
 	return y
 
 #This is a wrapper function to preserve previous functionality
-#def piecewiseLagrangePolynomialInterpolation(knots, degree = 3, evaluationInterval = knots):
-	
-
+def piecewiseLagrangePolynomialInterpolation(knots, degree = 3, evaluationInterval = np.linspace(-1, 1, 101)):
+	return piecewiseLagrangePolynomialInterpolationFunction( knots, degree )(evaluationInterval)
 
 
 
