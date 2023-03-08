@@ -45,8 +45,8 @@ def lagrange_polynomial_degree(a,b,M,N):
     #y0 = f(x0)
     A = np.vander(x0)       
     a = np.linalg.solve(A,y0) 
-    pows = (M-1-np.arange(M)).reshape(M,1)         # these are the exponents required
-    xnew = np.reshape(x,(1,N))                     # reshape for the broadcast
+    pows = (M-1-np.arange(M)).reshape(M,1)         
+    xnew = np.reshape(x,(1,N))                     
     ynew = np.sum((xnew**pows)*a.reshape(M,1),axis=0) 
     return ynew
 
@@ -55,7 +55,7 @@ def lagrange_polynomial_degree(a,b,M,N):
 def polynomial_plot(a=1,b=2,degree=1):
     N = 100
     x = np.linspace(1, 2, N)
-    x0 = np.linspace(a,b,degree+1)
+    x0 = np.linspace(a,b,10)
     y0 = f(x0)
     plt.figure(figsize=(8,5))
     plt.plot(x0,y0,label='data')

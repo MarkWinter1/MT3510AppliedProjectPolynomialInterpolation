@@ -1,47 +1,62 @@
-### PART 1 ###
 import matplotlib.pyplot as plt
 import numpy as np, numpy
 from scipy.interpolate import CubicSpline
 
+def piecewiseLagrangePolynomialInterpolationFunction(x0, y0, xEval, degree = 3):
+    Ndeg = degree
+    M = len(x0)
+    N = len(xEval)
+    # First perform the non piecewise interpolation for comparison
+    #----------------------------------------------------------------
+    A = np.vander(x0)          # construct the Vandermode matrix
+    a = np.linalg.solve(A,y0)  # obtain the coefficients by solving the system
+    pows = (M-1-np.arange(M)).reshape(M,1)         # these are the exponents required
+    xnew = np.reshape(xEval,(1,N))                     # reshape for the broadcast
+    ynew = np.sum((xnew**pows)*a.reshape(M,1),axis=0) # multiply by coefficients and sum along the right direction
 
-def piecewiseLagrangePolynomialInterpolation( knots, degree = 3 ):
+    # Now do out piecewise polynomial
+    #----------------------------------------------------------------
 
-	#put the knots into a dual list form for simplicity reasons
-	knotsX = np.array([ knot[0] for knot in knots ])
-	knotsY = np.array([ knot[1] for knot in knots ])
+    Ndeg = 3
+    h = x0[2]-x0[1]
 
-	M = len(knotsX)
-	h = knotsX[2]-knotsX[1]
+    # We have M-deg interpolants to obtain
 
-	# We have M-deg interpolants to obtain
-	Nint = M - degree
-	pt1 = np.arange(degree+1)
-	pts = pt1 + np.arange(Nint).reshape(Nint,1) # these are the sets of points we require
+    Nint = M - Ndeg
+    pt1 = np.arange(Ndeg+1)
+    pts = pt1 + np.arange(Nint).reshape(Nint,1) # these are the sets of points we require
 
-	a = np.zeros((degree+1,Nint))
-	for i in range(Nint):
-		A = np.vander(knotsX[pts[i,:]])
-		a[:,i] = np.linalg.solve(A,knotsY[pts[i,:]])
+    a = np.zeros((Ndeg+1,Nint))
+    for i in range(Nint):
+        A = np.vander(x0[pts[i,:]])
+        a[:,i] = np.linalg.solve(A,y0[pts[i,:]])
 
-	pows = (degree-np.arange(degree+1))
-	y = np.empty_like(x)
+    pows = (Ndeg-np.arange(Ndeg+1))
+    y = np.empty_like(xEval)     # set up new data points
+    pows = Ndeg-np.arange(Ndeg+1)
 
-	h = (knotsX[-1]-knotsX[0])/(M-1)                  # assumed spacing
-	
-	# making sure we don't overshoot the last subinterval
-	k = np.minimum(M-2,((x-x[0])/h).astype(int)) 
+    for i in range(N):       # loop over new evaluation points
 
-	j = k - degree//2    
+        if((xEval[i]<x0).all()): # if we're outside of the interval, set k to extrapolate
+            k = 0
+        elif((xEval[i]>x0).all()):
+            k = M-1
+        else:                # find k for x_i, accounting for the possibility that x_i=x_k
+            k = np.where(((xEval[i]<x0[1:]) & (xEval[i]>=x0[:-1])) | 
+                         ((x0[1:]==xEval[i]) & (xEval[i]>x0[:-1])))[0][0]
 
-	# account for j<0 or j>Nint-1, i.e. at the edge
-	j = np.maximum(0,j)
-	j = np.minimum(j,Nint-1)
+        # k is the left hand data point of our current subinterval; 
+        # we need the polynomial with this point as the *centre*
+    
+        j = k - Ndeg//2    
 
-	y = np.sum(a[:,j[:]]*(x[:]**pows.reshape(degree+1,1)),axis=0)
+        # account for j<0 or j>Nint-1, i.e. at the edge
+        j = np.maximum(0,j)
+        j = np.minimum(j,Nint-1)
 
-	return y
-
-
+        y[i] = np.sum(a[:,j]*xEval[i]**pows)
+    
+    return y
 ###############  PART FOUR  ################
 
 #  Load the data file wave_data1.txt (on JupyterHub) using np.loadtxt
@@ -64,43 +79,71 @@ def piecewiseLagrangePolynomialInterpolation( knots, degree = 3 ):
 
 
 
-### CHANGE FILE PATHWAY ###
-data = np.loadtxt("/Users/benbroughton/Downloads/wave_data1.txt")
-data2 = np.loadtxt("/Users/benbroughton/Downloads/wave_data1.txt")
+# Load the wave data
+data = np.loadtxt("./wave_data1.txt")
+data2 = np.loadtxt("./wave_data1.txt")
+
 yfull = data[1]
 xfull = data[0]
 store = []
+
+
+# Loop to find missing x value areas by identifying those with a difference 
+# larger than 0.11 (accounting for machine precision)
 for i in range(1,len(xfull)):
     diff = xfull[i]-xfull[i-1]
-    if diff > 0.11:
-        data = [i-1, xfull[i-1], xfull[i], diff]
+    if diff > 0.11:                                        
+        data = [i-1, xfull[i-1], xfull[i], diff]               # Information required to recover missing x values
         store.append(data)
         
 missing_store = []
 ymiss = []
-# loop to find missing x values by identifying those with a difference larger than 0.1 (accounting for machine precision)
-# then return them with an array so they may be plotted for visualisation
+
+
+# Recover all missing x values and print the number of missing points
 for i in range(len(store)):
     x_temp = np.arange(store[i][1]+0.1,round(store[i][2],1)-0.001, 0.1)
-    coord_pai = []
     for j in range(len(x_temp)):
-        coord_pair = [x_temp[j],0]
-        missing_store.append(coord_pair)
-missing_points = np.transpose(missing_store)
+        missing_store.append(x_temp[j])
 q4a = len(missing_store)
-### As seen in q4a we see we have 8 missing points
+
+print(f'Question 4(a) answer: We have {q4a} missing points.')
 
 
-fig, ax = plt.subplots(figsize=(15, 6))
-ax.plot(xfull,yfull)
-
-ax.scatter(missing_points[0], missing_points[1], marker="*", color="r", s=50, zorder=2)
-print(q4a)
 
 
-### q4b - the parts I can currently do ###
+# Plot the first 20 seconds of Wave Data
+fig, ax = plt.subplots(figsize=(15, 7))
+ax.plot(xfull[:201-9],yfull[:201-9], label = 'Wave Data')
+
+
+# Generate uniformly sampled data on 0.01 sub intervals
 x_new = np.linspace(0,20,201)
-#interpolated_data = piecewiseLagrangePolynomialInterpolation(np.transpose(data2), degree = 3 )
+    
+# Perform Piecewise Lagrange Polynomial Interpolation on sampled data
+y_new = piecewiseLagrangePolynomialInterpolationFunction(xfull, yfull, xEval = x_new, degree = 3)
+
+# Perform Cubic Spline Interpolation on sampled data
 cubic_spline = CubicSpline(data2[0], data2[1],bc_type='natural')
-ax.plot(x_new,cubic_spline(x_new))
+
+
+# Plot the results of interpolation methods
+ax.plot(x_new,cubic_spline(x_new),'.', label = 'Cubic Spline Interpolated')
+ax.plot(x_new, y_new, '.', label = 'Piecwise Polynomial Interpolated')
+
+plt.title('Wave Data with Interpolated Data Using Cubic Spline and Piecewise Polynomial Methods')
+plt.legend()
+plt.xlabel('Time in Seconds')
+plt.ylabel('Elevation of Water in Meters')
+
+
+# Plot the difference between interpolation methods
+fig, ax2 = plt.subplots(figsize=(15, 7))
+
+err = abs(cubic_spline(x_new)-y_new)
+ax2.plot(x_new, err)
+
+plt.title('Absolute Difference Between Piecewise Polynomial and Cubic Spline Interpolation on Wave Data')
+plt.xlabel('Time in Seconds')
+plt.ylabel('| Cubic Spline - Piecewise Polynomial |')
 
