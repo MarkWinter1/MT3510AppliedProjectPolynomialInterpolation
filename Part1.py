@@ -15,46 +15,30 @@ import numpy as np, numpy
 
 ############## IMPLEMENTATION ##############
 
-#degree is a positive int, knots is a list of coordinate pairs (x, y) 
+#x0, y0 are the x and y values of the knots, xEval is the list on which to evaluate
+#returns the evaluation of xEval using the polynomial interpolation
 def piecewiseLagrangePolynomialInterpolationFunction(x0, y0, xEval, degree = 3):
-    Ndeg = degree
-    M = len(x0)
-    N = len(xEval)
-    # First perform the non piecewise interpolation for comparison
-    #----------------------------------------------------------------
-    A = np.vander(x0)          # construct the Vandermode matrix
-    a = np.linalg.solve(A,y0)  # obtain the coefficients by solving the system
-    pows = (M-1-np.arange(M)).reshape(M,1)         # these are the exponents required
-    xnew = np.reshape(xEval,(1,N))                     # reshape for the broadcast
-    ynew = np.sum((xnew**pows)*a.reshape(M,1),axis=0) # multiply by coefficients and sum along the right direction
 
-    # Now do out piecewise polynomial
-    #----------------------------------------------------------------
+    # We have len(x0)-deg interpolants to obtain
+    knotIntervalCount = len(x0) - degree
+    pt1 = np.arange(degree+1)
+    pts = pt1 + np.arange(knotIntervalCount).reshape(knotIntervalCount,1) # these are the sets of points we require
 
-    Ndeg = 3
-    h = x0[2]-x0[1]
-
-    # We have M-deg interpolants to obtain
-
-    Nint = M - Ndeg
-    pt1 = np.arange(Ndeg+1)
-    pts = pt1 + np.arange(Nint).reshape(Nint,1) # these are the sets of points we require
-
-    a = np.zeros((Ndeg+1,Nint))
-    for i in range(Nint):
+    #structure a
+    a = np.zeros((degree+1,knotIntervalCount))
+    for i in range(knotIntervalCount):
         A = np.vander(x0[pts[i,:]])
         a[:,i] = np.linalg.solve(A,y0[pts[i,:]])
 
-    pows = (Ndeg-np.arange(Ndeg+1))
     y = np.empty_like(xEval)     # set up new data points
-    pows = Ndeg-np.arange(Ndeg+1)
+    powers = degree-np.arange(degree+1)
 
-    for i in range(N):       # loop over new evaluation points
+    for i in range(len(xEval)):       # loop over new evaluation points
 
         if((xEval[i]<x0).all()): # if we're outside of the interval, set k to extrapolate
             k = 0
         elif((xEval[i]>x0).all()):
-            k = M-1
+            k = len(x0)-1
         else:                # find k for x_i, accounting for the possibility that x_i=x_k
             k = np.where(((xEval[i]<x0[1:]) & (xEval[i]>=x0[:-1])) | 
                          ((x0[1:]==xEval[i]) & (xEval[i]>x0[:-1])))[0][0]
@@ -62,12 +46,12 @@ def piecewiseLagrangePolynomialInterpolationFunction(x0, y0, xEval, degree = 3):
         # k is the left hand data point of our current subinterval; 
         # we need the polynomial with this point as the *centre*
     
-        j = k - Ndeg//2    
+        j = k - degree//2    
 
-        # account for j<0 or j>Nint-1, i.e. at the edge
+        # account for j<0 or j>knotIntervalCount-1, i.e. at the edge
         j = np.maximum(0,j)
-        j = np.minimum(j,Nint-1)
+        j = np.minimum(j,knotIntervalCount-1)
 
-        y[i] = np.sum(a[:,j]*xEval[i]**pows)
+        y[i] = np.sum(a[:,j]*xEval[i]**powers)
     
     return y
