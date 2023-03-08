@@ -46,7 +46,7 @@ for i in range(D):
     plt.loglog(h[i], error_max[i], label = text)
 
 plt.xlabel('$h$')
-plt.ylabel('$E(h)$')    
+plt.ylabel('$Error(h)$')    
 plt.legend()
 plt.show()
 
@@ -62,6 +62,6 @@ plt.loglog(h[-1], 10000*h[-1]**7, linestyle = 'dashed', label = '$h^7$')
 plt.loglog(h[-1], 100000*h[-1]**9, linestyle = 'dashed', label = '$h^9$')
 
 plt.xlabel('$h$')
-plt.ylabel('$E(h)$')
+plt.ylabel('$Error(h)$')
 plt.legend()
 plt.show()
