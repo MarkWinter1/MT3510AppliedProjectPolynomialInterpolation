@@ -11,7 +11,7 @@ import Part1
 f = lambda x: (numpy.e)**x * numpy.cos(10*x)
 
 N = 103
-x = np.linspace(-0.5,0.5,N)
+x = np.linspace(-2,2,N)
 
 M = 11
 x0 = np.linspace(-1,1,M)

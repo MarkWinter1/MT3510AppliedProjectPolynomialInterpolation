@@ -17,41 +17,45 @@ import numpy as np, numpy
 
 #x0, y0 are the x and y values of the knots, xEval is the list on which to evaluate
 #returns the evaluation of xEval using the polynomial interpolation
-def piecewiseLagrangePolynomialInterpolationFunction(x0, y0, xEval, degree = 3):
+def piecewiseLagrangePolynomialInterpolationFunction(x0, y0, xEval, degree = 3, exposeFunction = False ):
 
     # We have len(x0)-deg interpolants to obtain
     knotIntervalCount = len(x0) - degree
     pt1 = np.arange(degree+1)
     pts = pt1 + np.arange(knotIntervalCount).reshape(knotIntervalCount,1) # these are the sets of points we require
 
-    #structure a
+    #structure a as a two dimensional array 
     a = np.zeros((degree+1,knotIntervalCount))
     for i in range(knotIntervalCount):
         A = np.vander(x0[pts[i,:]])
         a[:,i] = np.linalg.solve(A,y0[pts[i,:]])
 
-    y = np.empty_like(xEval)     # set up new data points
     powers = degree-np.arange(degree+1)
 
-    for i in range(len(xEval)):       # loop over new evaluation points
 
-        if((xEval[i]<x0).all()): # if we're outside of the interval, set k to extrapolate
+    def ThisLPInterpApproximation(inputPoint):
+        if (inputPoint < min(x0)): # if we're outside of the interval, set k to extrapolate
             k = 0
-        elif((xEval[i]>x0).all()):
+        elif((inputPoint > x0).all()):
             k = len(x0)-1
         else:                # find k for x_i, accounting for the possibility that x_i=x_k
-            k = np.where(((xEval[i]<x0[1:]) & (xEval[i]>=x0[:-1])) | 
-                         ((x0[1:]==xEval[i]) & (xEval[i]>x0[:-1])))[0][0]
+            k = np.where(((inputPoint<x0[1:]) & (inputPoint>=x0[:-1])) | 
+                            ((x0[1:]==inputPoint) & (inputPoint>x0[:-1])))[0][0]
 
         # k is the left hand data point of our current subinterval; 
         # we need the polynomial with this point as the *centre*
     
-        j = k - degree//2    
+        j = k - degree//2
 
         # account for j<0 or j>knotIntervalCount-1, i.e. at the edge
         j = np.maximum(0,j)
         j = np.minimum(j,knotIntervalCount-1)
 
-        y[i] = np.sum(a[:,j]*xEval[i]**powers)
-    
-    return y
+        y = np.sum( a[:,j]*inputPoint ** powers)
+        return y
+
+    if(exposeFunction):
+        return ThisLPInterpApproximation
+
+    return numpy.array([ThisLPInterpApproximation(x) for x in xEval])
+
