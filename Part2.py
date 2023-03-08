@@ -60,40 +60,15 @@ def piecewiseLagrangePolynomialInterpolationFunction(x0, y0, xEval, degree = 3):
 
 f = lambda x: (numpy.e)**x * numpy.cos(10*x)
 
-N = 101
-x = np.linspace(-1,1,N)
+N = 61
+D = 8
 
-M = 11
-x0 = np.linspace(-1,1,M)
-y0 = f(x0)
+h = np.zeros([D, N])
+error_max = np.zeros([D, N])
 
-y = piecewiseLagrangePolynomialInterpolationFunction(x0, y0, x)
+x = np.linspace(0.3,0.6,500)    # Take large number of points over a small subset to ensure that the max error will never be 0
 
-# plt.figure(figsize=(8,5))
-# plt.plot(x,f(x),label='exact function')
-# plt.plot(x0,y0,'kx',mew=2,label='data')
-# plt.plot(x,y,'.',label='polynomial interpolated')
-# plt.xlabel('x')
-# plt.ylabel('y')
-# plt.legend()
-# plt.tight_layout()
-# plt.show()
-
-# plt.figure(figsize=(8,5))
-# plt.plot(x,np.abs(f(x)-y),label='polynomial interpolated')
-# plt.xlabel('$x$')
-# plt.ylabel('$|y-p|$')
-# plt.title('Error')
-# plt.legend()
-# plt.tight_layout()
-# plt.show()
-
-h = np.zeros([6, N])
-error_max = np.zeros([6, N])
-
-x1 = np.linspace(0.3,0.6,500)    # Take large number of points over a small subset to ensure that the max error will never be 0
-
-for i in range(3, 9):    # Create loop to vary degree
+for i in range(1, 1+D):    # Create loop to vary degree
 
     for j in range(N):    # Create loop to vary number of knots N
     
@@ -101,14 +76,15 @@ for i in range(3, 9):    # Create loop to vary degree
         
         y0 = f(x0)
     
-        y = piecewiseLagrangePolynomialInterpolationFunction(x0, y0, x1, i) 
+        y = piecewiseLagrangePolynomialInterpolationFunction(x0, y0, x, i) 
         
-        h[i-3][j] = x0[1] - x0[0]    # Calculate h within interpolation function and return
-        error_max[i-3][j] = np.max(np.abs(y - f(x1)))
+        h[i-1][j] = x0[1] - x0[0]    # Calculate h within interpolation function and return
+        error_max[i-1][j] = np.max(np.abs(y - f(x)))
+        
 
 fig = plt.figure(figsize = (8, 5))    # Plot all degrees tested
-for i in range(6):
-    text = 'degree = {:}'.format(i+3)
+for i in range(D):
+    text = 'degree = {:}'.format(i+1)
     plt.loglog(h[i], error_max[i], label = text)
 
 plt.xlabel('$h$')
@@ -118,12 +94,16 @@ plt.show()
 
 
 fig1 = plt.figure(figsize = (8 ,5))    # Plot a few degrees and test for trend
-for i in range(0, 6, 3):
-    text = 'degree = {:}'.format(i+3)
+for i in range(1, D, 2):
+    text = 'degree = {:}'.format(i+1)
     plt.loglog(h[i], error_max[i], label = text)
 
-plt.loglog(h[-1], 100*h[-1]**4, linestyle = 'dashed', label = '$h^4$')
+plt.loglog(h[-1], 100*h[-1]**3, linestyle = 'dashed', label = '$h^3$')
+plt.loglog(h[-1], 1000*h[-1]**5, linestyle = 'dashed', label = '$h^5$')
 plt.loglog(h[-1], 10000*h[-1]**7, linestyle = 'dashed', label = '$h^7$')
+plt.loglog(h[-1], 100000*h[-1]**9, linestyle = 'dashed', label = '$h^9$')
 
 plt.xlabel('$h$')
 plt.ylabel('$E(h)$')
+plt.legend()
+plt.show()
