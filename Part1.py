@@ -79,14 +79,6 @@ def piecewiseLagrangePolynomialInterpolationFunction(x0, y0, xEval = False, degr
 #stored in x1 and y1 created via the following code, and choosing appropriate new
 #evaluation points yourself.
 
-f = lambda x: (numpy.e)**x * numpy.cos(10*x)
-
-
-
-
-############## OTHER TESTING ##################
-#Everything past here should be surplus to requirement
-
 #given function
 f = lambda x: (numpy.e)**x * numpy.cos(10*x)
 
