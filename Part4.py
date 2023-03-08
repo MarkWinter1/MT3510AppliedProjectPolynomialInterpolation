@@ -80,27 +80,28 @@ def piecewiseLagrangePolynomialInterpolationFunction(x0, y0, xEval, degree = 3):
 
 
 ### CHANGE FILE PATHWAY ###
-data = np.loadtxt("/Users/benbroughton/Downloads/wave_data1.txt")
-data2 = np.loadtxt("/Users/benbroughton/Downloads/wave_data1.txt")
+
+data = np.loadtxt("./wave_data1.txt")
+data2 = np.loadtxt("./wave_data1.txt")
 
 yfull = data[1]
 xfull = data[0]
 store = []
 
-# loop to find missing x value areas by identifying those with a difference 
-# larger than 0.11 (accounting for machine precision)
 
+# Loop to find missing x value areas by identifying those with a difference 
+# larger than 0.11 (accounting for machine precision)
 for i in range(1,len(xfull)):
     diff = xfull[i]-xfull[i-1]
     if diff > 0.11:                                        
-        data = [i-1, xfull[i-1], xfull[i], diff]     # information required to recover missing x values
+        data = [i-1, xfull[i-1], xfull[i], diff]               # Information required to recover missing x values
         store.append(data)
         
 missing_store = []
 ymiss = []
 
-# recover all missing x values and print the number of missing points
 
+# Recover all missing x values and print the number of missing points
 for i in range(len(store)):
     x_temp = np.arange(store[i][1]+0.1,round(store[i][2],1)-0.001, 0.1)
     for j in range(len(x_temp)):
@@ -111,17 +112,23 @@ print(f'Question 4(a) answer: We have {q4a} missing points.')
 
 
 
-fig, ax = plt.subplots(figsize=(15, 7))
 
+# Plot the first 20 seconds of Wave Data
+fig, ax = plt.subplots(figsize=(15, 7))
 ax.plot(xfull[:201-9],yfull[:201-9], label = 'Wave Data')
 
 
+# Generate uniformly sampled data on 0.01 sub intervals
 x_new = np.linspace(0,20,201)
+    
+# Perform Piecewise Lagrange Polynomial Interpolation on sampled data
 y_new = piecewiseLagrangePolynomialInterpolationFunction(xfull, yfull, xEval = x_new, degree = 3)
 
-
+# Perform Cubic Spline Interpolation on sampled data
 cubic_spline = CubicSpline(data2[0], data2[1],bc_type='natural')
 
+
+# Plot the results of interpolation methods
 ax.plot(x_new,cubic_spline(x_new),'.', label = 'Cubic Spline Interpolated')
 ax.plot(x_new, y_new, '.', label = 'Piecwise Polynomial Interpolated')
 
@@ -130,6 +137,8 @@ plt.legend()
 plt.xlabel('Time in Seconds')
 plt.ylabel('Elevation of Water in Meters')
 
+
+# Plot the difference between interpolation methods
 fig, ax2 = plt.subplots(figsize=(15, 7))
 
 err = abs(cubic_spline(x_new)-y_new)
