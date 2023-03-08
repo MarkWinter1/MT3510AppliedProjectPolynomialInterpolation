@@ -72,14 +72,14 @@ for i in range(1, 1+D):    # Create loop to vary degree
 
     for j in range(N):    # Create loop to vary number of knots N
     
-        x0 = np.linspace(-1, 1, j+60)    # Skip large h
+        x0 = np.linspace(-1, 1, j+60)    # Focus on small h
         
         y0 = f(x0)
     
         y = piecewiseLagrangePolynomialInterpolationFunction(x0, y0, x, i) 
         
-        h[i-1][j] = x0[1] - x0[0]    # Calculate h within interpolation function and return
-        error_max[i-1][j] = np.max(np.abs(y - f(x)))
+        h[i-1][j] = x0[1] - x0[0]    # Calculate h as space between points. Evenly spaced so can just use two points from x0
+        error_max[i-1][j] = np.max(np.abs(y - f(x)))    # Calculate error as maximum absolute value between actual function and interpolant
         
 
 fig = plt.figure(figsize = (8, 5))    # Plot all degrees tested
