@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import random
 import numpy as np, numpy
 
 ###############  PART ONE  ################
@@ -78,40 +79,60 @@ def piecewiseLagrangePolynomialInterpolationFunction(x0, y0, xEval = False, degr
 #stored in x1 and y1 created via the following code, and choosing appropriate new
 #evaluation points yourself.
 
+f = lambda x: (numpy.e)**x * numpy.cos(10*x)
+
+
+
+
+############## OTHER TESTING ##################
+#Everything past here should be surplus to requirement
+
 #given function
 f = lambda x: (numpy.e)**x * numpy.cos(10*x)
 
-N = 103
-TestEvalX = np.linspace(-2,2,N)
+#constants and conditions
+a, b, c, d = 0.9, 1.3, 0.9, 1.3
+EvalPointCount = 500
+KnotCount = 10
 
-M = 11
-TestKnotX = np.linspace(-1,1,M)
-TestKnotY = f(TestKnotX)
+TestEvalX = np.linspace(c,d,EvalPointCount)
+
+##Test One: delete some elements
+#TestKnotX = np.linspace(-1,1,KnotCount)
+#TestKnotX = numpy.delete(TestKnotX, [ random.choice([True, False]) for none in TestKnotX] ) 
+
+##Test Two: generate knots randomly
+#TestKnotX = numpy.array(sorted([random.uniform(a, b) for i in range(KnotCount)]))
+
+##Test Three: actual given Test: Knots generated using a transformation on linear dist.
+TestKnotX = 1/(1-np.linspace(0,1/6,KnotCount))
+
+TestKnotY = numpy.array(f(TestKnotX))
+
 
 TestEvalY = piecewiseLagrangePolynomialInterpolationFunction(TestKnotX, TestKnotY, TestEvalX)
-
+##Note here that either of these generating methods for TestEvalY will work,
+##Between asking the function to evaluate or taking the function and evaluating yourself
+##In this case, the below code overwrites the above, just kept to show that both do work
 TestInterpFunction = piecewiseLagrangePolynomialInterpolationFunction(TestKnotX, TestKnotY)
-
 TestEvalY = numpy.array([TestInterpFunction(x) for x in TestEvalX])
 
+#here for grading, don't like the variable names personally
+x1 = TestEvalX
+y1 = TestEvalY
 
 ############## Plotting #################
 
-plt.figure(figsize=(8,5))
-plt.plot(TestEvalX,f(TestEvalX),label='exact function')
-plt.plot(TestKnotX,TestKnotY,'kx',mew=2,label='data')
-plt.plot(TestEvalX,TestEvalY,'.',label='polynomial interpolated')
+plt.plot(TestEvalX,f(TestEvalX), label='exact function')
+plt.plot(TestKnotX,TestKnotY,'kx',mew=2,label='knots')
+plt.plot(TestEvalX,TestEvalY, label='polynomial interpolated function')
 plt.xlabel('x')
 plt.ylabel('y')
 plt.legend()
-plt.tight_layout()
 plt.show()
 
-plt.figure(figsize=(8,5))
-plt.plot(TestEvalX,np.abs(f(TestEvalX)-TestEvalY),label='polynomial interpolated')
+plt.plot(TestEvalX,f(TestEvalX)-TestEvalY)
 plt.xlabel('$x$')
 plt.ylabel('$|y-p|$')
-plt.title('Error')
-plt.legend()
-plt.tight_layout()
+plt.title('Signed Error')
 plt.show()
