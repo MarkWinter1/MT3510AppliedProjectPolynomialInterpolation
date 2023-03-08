@@ -79,8 +79,7 @@ def piecewiseLagrangePolynomialInterpolationFunction(x0, y0, xEval, degree = 3):
 
 
 
-### CHANGE FILE PATHWAY ###
-
+# Load the wave data
 data = np.loadtxt("./wave_data1.txt")
 data2 = np.loadtxt("./wave_data1.txt")
 
