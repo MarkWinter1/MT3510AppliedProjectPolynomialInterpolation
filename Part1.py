@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import random
 import numpy as np, numpy
 
 ###############  PART ONE  ################
@@ -12,46 +13,135 @@ import numpy as np, numpy
 #stored in x1 and y1 created via the following code, and choosing appropriate new
 #evaluation points yourself.
 
-
 ############## IMPLEMENTATION ##############
 
-#x0, y0 are the x and y values of the knots, xEval is the list on which to evaluate
-#returns the evaluation of xEval using the polynomial interpolation
-def piecewiseLagrangePolynomialInterpolationFunction(x0, y0, xEval, degree = 3):
+#   KnotX, KnotY are the x and y values of the knots, xEval is the list on which to
+#evaluate returns the evaluation of xEval using the polynomial interpolation
+#of given degree degree
+#   If xEval is left empty, or if xEval is given as False, this will 
+#not operate the interpolation itself, but instead pass what is effectively
+#the polynomial function which can then be used by the user. 
+def piecewiseLagrangePolynomialInterpolationFunction(KnotX, KnotY, xEval = False, degree = 3):
 
-    # We have len(x0)-deg interpolants to obtain
-    knotIntervalCount = len(x0) - degree
+    # We have len(KnotX)-deg interpolants to obtain
+    knotIntervalCount = len(KnotX) - degree
+
+    # these are the sets of points we require
     pt1 = np.arange(degree+1)
-    pts = pt1 + np.arange(knotIntervalCount).reshape(knotIntervalCount,1) # these are the sets of points we require
+    pts = pt1 + np.arange(knotIntervalCount).reshape(knotIntervalCount,1)
 
-    #structure a
-    a = np.zeros((degree+1,knotIntervalCount))
+    # structure a as a two dimensional array with appropriate size
+    a = np.empty((degree+1,knotIntervalCount))
+
+    # iterate through the knots and populate a by solving the vandermode matrix
     for i in range(knotIntervalCount):
-        A = np.vander(x0[pts[i,:]])
-        a[:,i] = np.linalg.solve(A,y0[pts[i,:]])
+        A = np.vander(KnotX[pts[i,:]])
+        a[:,i] = np.linalg.solve(A,KnotY[pts[i,:]])
 
-    y = np.empty_like(xEval)     # set up new data points
-    powers = degree-np.arange(degree+1)
+    # make a simple powers literal for later array broadcasting in evaluation
+    powers = ( range(degree, -1, -1) )
 
-    for i in range(len(xEval)):       # loop over new evaluation points
+    # now that all of the constants are calculated in a from the knots 
+    # make the polynomial into a function for user fun and pleasure
+    def ThisLPInterpApproximation(inputPoint):
 
-        if((xEval[i]<x0).all()): # if we're outside of the interval, set k to extrapolate
+        #outside the knotted interval, k needs to be changed so the function can extrapolate
+        if (inputPoint < min(KnotX)): 
+            #set to 0 for below min knot
             k = 0
-        elif((xEval[i]>x0).all()):
-            k = len(x0)-1
-        else:                # find k for x_i, accounting for the possibility that x_i=x_k
-            k = np.where(((xEval[i]<x0[1:]) & (xEval[i]>=x0[:-1])) | 
-                         ((x0[1:]==xEval[i]) & (xEval[i]>x0[:-1])))[0][0]
+
+        elif(inputPoint > max(KnotX)):
+            #and to knot count-1 for above max knot
+            k = len(KnotX)-1
+
+        else:
+            #find k for x_i, accounting for the possibility that x_i=x_k
+            k = np.where(((inputPoint<KnotX[1:]) & (inputPoint>=KnotX[:-1])) | ((KnotX[1:]==inputPoint) & (inputPoint>KnotX[:-1])))[0][0]
 
         # k is the left hand data point of our current subinterval; 
         # we need the polynomial with this point as the *centre*
     
-        j = k - degree//2    
+        #start by setting j to be 
+        j = k - degree//2
 
-        # account for j<0 or j>knotIntervalCount-1, i.e. at the edge
-        j = np.maximum(0,j)
-        j = np.minimum(j,knotIntervalCount-1)
+        # make sure j is greater than 0 and that j does not exceed the interval count
+        j = min(max(0,j),knotIntervalCount-1)
 
-        y[i] = np.sum(a[:,j]*xEval[i]**powers)
+        #finally explicitly calculate and return
+        return np.sum( a[:,j]*inputPoint ** powers)
+
+    #If there was no evaluation set given, expose the interpolation function instead
+    #Not sure if "expose" is the perfect term for this but it's a cool thing to do
+    if( type(xEval) == bool and not(xEval) ):
+        return ThisLPInterpApproximation
     
-    return y
+    #Otherwise, just perform the function on the input set, return the output
+    else:
+        return numpy.array([ThisLPInterpApproximation(x) for x in xEval])
+
+############### Plotting #################
+#fun little format for easier testing
+def plotinterp(x, y, knotx, knoty, f, name = 'Piecewise Lagrange Polynomial Interpolation of e^x cos(10x)'):
+    fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, sharex=True)
+
+    ax1.set_title(name)
+    ax1.set_ylabel('y')
+    ax1.plot(x,f(x), label='exact function')
+    ax1.plot(knotx,knoty,'kx',mew=2,label='knots')
+    ax1.plot(x,y, label='polynomial interpolated function')
+    plt.xlabel('x')
+    ax1.legend()
+
+    ax2.set_ylabel('$|y-p|$')
+    ax2.set_title('Signed Error')
+    ax2.plot(x,f(x)-y, label='Signed Error')
+    ax2.legend()
+    plt.show()
+    return True
+
+############## TESTING ##################
+
+# Validate this function using test knots generated by the function
+#stored in x1 and y1 created via the following code, and choosing appropriate new
+#evaluation points yourself.
+
+#given function
+f = lambda x: (numpy.e)**x * numpy.cos(10*x)
+
+##Test One: delete some elements from an evenly spaced interval
+KnotCount, a, b = 25, -1, 1
+EvenSpaced = np.linspace(a,b,KnotCount)
+Test1KnotX = numpy.delete(EvenSpaced, [ random.choice([True, False]) for i in EvenSpaced ] )
+Test1KnotY = numpy.array(f(Test1KnotX))
+
+EvalPointCount, c, d = 100, -1, 1.2
+Test1EvalX = np.linspace(c,d,EvalPointCount)
+Test1EvalY = piecewiseLagrangePolynomialInterpolationFunction(Test1KnotX, Test1KnotY, Test1EvalX)
+
+#plotinterp(Test1EvalX, Test1EvalY, Test1KnotX, f(Test1KnotX), f,  name="Test 1")
+
+##Test Two: generate knots randomly
+KnotCount, a, b = 10, -1, 1
+Test2KnotX = numpy.array(sorted([random.uniform(a, b) for i in range(KnotCount)]))
+Test2KnotY = numpy.array(f(Test2KnotX))
+
+EvalPointCount, c, d = 100, -1, 1.2
+Test2EvalX = np.linspace(c,d,EvalPointCount)
+Test2EvalY = piecewiseLagrangePolynomialInterpolationFunction(Test2KnotX, Test2KnotY, Test2EvalX)
+
+#plotinterp(Test2EvalX, Test2EvalY, Test2KnotX, f(Test2KnotX), f, name="Test 2")
+
+##Test Three: __actual given Test__: Knots generated using a transformation on linear dist.
+KnotCount= 10
+Test3KnotX = 1/(1-np.linspace(0,1/6,KnotCount))
+Test3KnotY = numpy.array(f(Test3KnotX))
+
+EvalPointCount, c, d = 100, 0.9, 1.3
+Test3EvalX = np.linspace(c,d,EvalPointCount)
+Test3EvalY = piecewiseLagrangePolynomialInterpolationFunction(Test3KnotX, Test3KnotY, Test3EvalX)
+
+plotinterp(Test3EvalX, Test3EvalY, Test3KnotX, f(Test3KnotX), f)
+
+#here for grading
+x1 = Test3EvalX
+y1 = Test3EvalY

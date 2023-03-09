@@ -113,10 +113,10 @@ print(f'Question 4(a) answer: We have {q4a} missing points.')
 
 
 # Plot the first 20 seconds of Wave Data
-fig, ax = plt.subplots(figsize=(15, 7))
-ax.plot(xfull[:201-9],yfull[:201-9], label = 'Wave Data')
+fig, ax1 = plt.subplots(figsize=(15, 7))
+ax1.plot(xfull[:201-9],yfull[:201-9], label = 'Wave Data')
 
-
+fig, ax2 = plt.subplots(figsize=(15, 7))
 # Generate uniformly sampled data on 0.01 sub intervals
 x_new = np.linspace(0,20,201)
     
@@ -128,8 +128,8 @@ cubic_spline = CubicSpline(data2[0], data2[1],bc_type='natural')
 
 
 # Plot the results of interpolation methods
-ax.plot(x_new,cubic_spline(x_new),'.', label = 'Cubic Spline Interpolated')
-ax.plot(x_new, y_new, '.', label = 'Piecwise Polynomial Interpolated')
+ax2.plot(x_new,cubic_spline(x_new),'.', label = 'Cubic Spline Interpolated')
+ax2.plot(x_new, y_new, '.', label = 'Piecwise Polynomial Interpolated')
 
 plt.title('Wave Data with Interpolated Data Using Cubic Spline and Piecewise Polynomial Methods')
 plt.legend()
@@ -138,10 +138,10 @@ plt.ylabel('Elevation of Water in Meters')
 
 
 # Plot the difference between interpolation methods
-fig, ax2 = plt.subplots(figsize=(15, 7))
+fig, ax3 = plt.subplots(figsize=(15, 7))
 
 err = abs(cubic_spline(x_new)-y_new)
-ax2.plot(x_new, err)
+ax3.plot(x_new, err)
 
 plt.title('Absolute Difference Between Piecewise Polynomial and Cubic Spline Interpolation on Wave Data')
 plt.xlabel('Time in Seconds')

@@ -16,48 +16,6 @@
 import matplotlib.pyplot as plt
 import numpy as np, numpy
 
-def piecewiseLagrangePolynomialInterpolationFunction(x0, y0, xEval, degree = 3):
-    Ndeg = degree
-    M = len(x0)
-    N = len(xEval)
-
-    # We have M-deg interpolants to obtain
-    Nint = M - Ndeg
-    pt1 = np.arange(Ndeg+1)
-    pts = pt1 + np.arange(Nint).reshape(Nint,1) # these are the sets of points we require
-
-    #structure a
-    a = np.zeros((Ndeg+1,Nint))
-    for i in range(Nint):
-        A = np.vander(x0[pts[i,:]])
-        a[:,i] = np.linalg.solve(A,y0[pts[i,:]])
-
-    y = np.empty_like(xEval)     # set up new data points
-    pows = Ndeg-np.arange(Ndeg+1)
-
-    for i in range(N):       # loop over new evaluation points
-
-        if((xEval[i]<x0).all()): # if we're outside of the interval, set k to extrapolate
-            k = 0
-        elif((xEval[i]>x0).all()):
-            k = M-1
-        else:                # find k for x_i, accounting for the possibility that x_i=x_k
-            k = np.where(((xEval[i]<x0[1:]) & (xEval[i]>=x0[:-1])) | 
-                         ((x0[1:]==xEval[i]) & (xEval[i]>x0[:-1])))[0][0]
-
-        # k is the left hand data point of our current subinterval; 
-        # we need the polynomial with this point as the *centre*
-    
-        j = k - Ndeg//2    
-
-        # account for j<0 or j>Nint-1, i.e. at the edge
-        j = np.maximum(0,j)
-        j = np.minimum(j,Nint-1)
-
-        y[i] = np.sum(a[:,j]*xEval[i]**pows)
-    
-    return y
-
 f = lambda x: (numpy.e)**x * numpy.cos(10*x)
 
 N = 61
@@ -72,14 +30,14 @@ for i in range(1, 1+D):    # Create loop to vary degree
 
     for j in range(N):    # Create loop to vary number of knots N
     
-        x0 = np.linspace(-1, 1, j+60)    # Skip large h
+        x0 = np.linspace(-1, 1, j+60)    # Focus on small h
         
         y0 = f(x0)
     
         y = piecewiseLagrangePolynomialInterpolationFunction(x0, y0, x, i) 
         
-        h[i-1][j] = x0[1] - x0[0]    # Calculate h within interpolation function and return
-        error_max[i-1][j] = np.max(np.abs(y - f(x)))
+        h[i-1][j] = x0[1] - x0[0]    # Calculate h as space between points. Evenly spaced so can just use two points from x0
+        error_max[i-1][j] = np.max(np.abs(y - f(x)))    # Calculate error as maximum absolute value between actual function and interpolant
         
 
 fig = plt.figure(figsize = (8, 5))    # Plot all degrees tested
@@ -88,7 +46,7 @@ for i in range(D):
     plt.loglog(h[i], error_max[i], label = text)
 
 plt.xlabel('$h$')
-plt.ylabel('$E(h)$')    
+plt.ylabel('$Error(h)$')    
 plt.legend()
 plt.show()
 
@@ -104,6 +62,6 @@ plt.loglog(h[-1], 10000*h[-1]**7, linestyle = 'dashed', label = '$h^7$')
 plt.loglog(h[-1], 100000*h[-1]**9, linestyle = 'dashed', label = '$h^9$')
 
 plt.xlabel('$h$')
-plt.ylabel('$E(h)$')
+plt.ylabel('$Error(h)$')
 plt.legend()
 plt.show()
