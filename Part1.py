@@ -13,6 +13,18 @@ import numpy as np, numpy
 #stored in x1 and y1 created via the following code, and choosing appropriate new
 #evaluation points yourself.
 
+############## DESCRIPTION #################
+
+#   This function seeks to approximate an unknown function, by way of performing piecewise
+# Lagrange polynomial interpolation on a given set of known values of the target function.
+#   These known values are referred to as "knots",
+#   The method used here, a piecewise Lagrange Polynomial Interpolation, is an extension
+# of the polynomial interpolations that we have been doing in tutorials, but done piecewise,
+# meaning that the polynomial differs throughout the domain.
+#   Specific details can be found in comments in the code body itself. 
+
+print ([1,2,3,5,7][:-1])
+
 ############## IMPLEMENTATION ##############
 
 #   KnotX, KnotY are the x and y values of the knots, xEval is the list on which to
@@ -55,7 +67,7 @@ def piecewiseLagrangePolynomialInterpolationFunction(KnotX, KnotY, xEval = False
             k = len(KnotX)-1
 
         else:
-            #find k for x_i, accounting for the possibility that x_i=x_k
+            #find the subinterval that the input point lies in, including the edge case where the input point is x_k
             k = np.where(((inputPoint<KnotX[1:]) & (inputPoint>=KnotX[:-1])) | ((KnotX[1:]==inputPoint) & (inputPoint>KnotX[:-1])))[0][0]
 
         # k is the left hand data point of our current subinterval; 
@@ -118,7 +130,8 @@ EvalPointCount, c, d = 100, -1, 1.2
 Test1EvalX = np.linspace(c,d,EvalPointCount)
 Test1EvalY = piecewiseLagrangePolynomialInterpolationFunction(Test1KnotX, Test1KnotY, Test1EvalX)
 
-#plotinterp(Test1EvalX, Test1EvalY, Test1KnotX, f(Test1KnotX), f,  name="Test 1")
+#Plot Test1
+plotinterp(Test1EvalX, Test1EvalY, Test1KnotX, f(Test1KnotX), f,  name="Test 1")
 
 ##Test Two: generate knots randomly
 KnotCount, a, b = 10, -1, 1
@@ -129,7 +142,8 @@ EvalPointCount, c, d = 100, -1, 1.2
 Test2EvalX = np.linspace(c,d,EvalPointCount)
 Test2EvalY = piecewiseLagrangePolynomialInterpolationFunction(Test2KnotX, Test2KnotY, Test2EvalX)
 
-#plotinterp(Test2EvalX, Test2EvalY, Test2KnotX, f(Test2KnotX), f, name="Test 2")
+#Plot Test2
+plotinterp(Test2EvalX, Test2EvalY, Test2KnotX, f(Test2KnotX), f, name="Test 2")
 
 ##Test Three: __actual given Test__: Knots generated using a transformation on linear dist.
 KnotCount= 10
@@ -141,6 +155,13 @@ Test3EvalX = np.linspace(c,d,EvalPointCount)
 Test3EvalY = piecewiseLagrangePolynomialInterpolationFunction(Test3KnotX, Test3KnotY, Test3EvalX)
 
 plotinterp(Test3EvalX, Test3EvalY, Test3KnotX, f(Test3KnotX), f)
+
+# This shows the approximation fitting very well with the given data within the knotted region,
+# but it fails quickly outside, as a polynomial approximation is intrinsically limited when trying
+# to approximate an infinite polynomial such as cosine. This is because a finite polynomial has a
+# necessarily finite number of roots (Fundamental Theorem of Algebra), whereas something like the 
+# cosine function has an infinite number of roots. Hence, this interpolation can approximate the 
+# target function on finite intervals, and very well at that, but must fail in longer cases.
 
 #here for grading
 x1 = Test3EvalX
